@@ -13,7 +13,9 @@ Fast, lightweight middleware framework.
 # Install
 
 ```
-$ npm install --save umid
+$ npm install umid
+
+$ yarn add umid
 ```
 # Usage
 
@@ -83,7 +85,7 @@ Returns an instance of a middleware
 
 ### use((context, next))
 
-Attach context and middleware(s).
+Attach middleware(s).
 
 These are the different signatures for use function
 
@@ -91,23 +93,31 @@ These are the different signatures for use function
 #### use(middleware)
 #### use([middleware1, middleware2])
 #### use(middleware1, middleware2)
+#### use(middleware1, [middleware2, middleware3], middlware4)
 
-### context
+### middleware
+
+This is the signature for defining middleware.
+
+(context, next)
+
+#### context
+
 The context that passes to the next middleware. This can be updated and passed on to next middleware.
 
-### next
+#### next
+
 Type: Function
 
 Most importantly, a middleware must either call next() or terminate the response with next('reason').
 
 #### process((err, context), initialContext)
 
-Its signature is (err, context), where err is the String or Error thrown by your middleware.
+### (err, context)
 
-### (err,context)
 Type: Function
 
-A catch-all error handler; executed whenever a middleware throws an error.
+Its signature is (err, context), where err is the String or Error thrown by the middleware.
 
 ### intialContext
 
@@ -125,8 +135,7 @@ This will exit the loop with your error string as the error message.
 
 ```js
 new Middleware().use((context, next) => {
-  let err = new Error('Try again');
-  next(err);
+  next('Try again');
 });
 ```
 
