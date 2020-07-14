@@ -3,13 +3,11 @@ const Middleware = require("../src");
 let m = new Middleware();
 
 // Pass string in next to create an error
-m
-    .use((context, next) => {
+    m.use((context, next) => {
 	    next("Try again");
     })
 
 	// Throw an error
-
 	.use((context, next) => {
 		throw new Error("Try again");
 	})
@@ -30,7 +28,7 @@ m
 		console.log("I never get executed :(");
 	})
 
-	.process((err, context) => {
+	.run((err, context) => {
 		if (err) console.log(err, context);
 		else console.log("Complete!", context);
 	}, {});

@@ -10,18 +10,27 @@ module.exports = class Middleware {
 		return this;
 	}
 
-	process(onerror, ...params) {
+	run(onerror, ...params) {
 		try {
 			let middleware = this._fns.shift();
-			return middleware
+			middleware
 				? middleware(...params, (err) =>
 						err
 							? onerror(err, ...params)
-							: this.process(onerror, ...params)
+							: this.run(onerror, ...params)
 				  )
 				: onerror(null, ...params);
 		} catch (err) {
 			onerror(err, ...params);
 		}
+	}
+
+	process(...params) {
+		return new Promise((resolve, reject) => {
+			this.run((err, context) => {
+				if (err) reject(err);
+				else resolve(context);
+			}, ...params);
+		});
 	}
 };

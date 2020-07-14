@@ -92,7 +92,7 @@ m.use(
 	}
 );
 
-m.process(
+m.run(
 	(e, req, res) => {
 		if (e) console.log("Error found!!", e, req, res);
 		else console.log("Complete");

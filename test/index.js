@@ -6,26 +6,26 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 describe("Middleware flow test", () => {
 	it("Empty middleware", (done) => {
 		let m = new Middleware();
-		m.process(() => {});
+		m.run(() => {});
 		done();
 	});
 
 	it("Basic middleware without context", (done) => {
-		new Middleware().use((context, next) => next()).process(() => {});
+		new Middleware().use((context, next) => next()).run(() => {});
 		done();
 	});
 
 	it("Basic middleware with context", (done) => {
 		new Middleware()
 			.use((context, next) => next())
-			.process(() => {}, { a: 100 });
+			.run(() => {}, { a: 100 });
 		done();
 	});
 
 	it("Basic middleware with context, error and complete function", () => {
 		new Middleware()
 			.use((context, next) => next())
-			.process(
+			.run(
 				(err, context) => {
 					if (err) console.log(err);
 					else assert.deepEqual(context, { a: 100 });
@@ -37,7 +37,7 @@ describe("Middleware flow test", () => {
 	it("Middleware should handle next function error", (done) => {
 		new Middleware()
 			.use((context, next) => next("ERROR!!"))
-			.process(
+			.run(
 				(err, context) =>
 					err ? assert.equal(err, "ERROR!!") : console.log(context),
 				{}
@@ -50,7 +50,7 @@ describe("Middleware flow test", () => {
 			.use((context, next) => {
 				throw "ERROR!!";
 			})
-			.process((err, context) => {
+			.run((err, context) => {
 				if (err) {
 					assert.equal(err, "ERROR!!");
 					done();
@@ -69,7 +69,7 @@ describe("Middleware flow test", () => {
 				console.log("I never get executed");
 				next();
 			})
-			.process(
+			.run(
 				(err, context) =>
 					err ? assert.equal(err, "ERROR!!") : console.log(context),
 				{}
@@ -87,7 +87,7 @@ describe("Middleware flow test", () => {
 				await sleep(1000);
 				next();
 			})
-			.process(
+			.run(
 				(err, context) => (err ? assert.equal(err, "ERROR!!") : done()),
 				{}
 			);
@@ -102,7 +102,7 @@ describe("Middleware flow test", () => {
 				console.log("I never get executed!!");
 				next();
 			})
-			.process((err, context) => (err ? console.log(err) : done()), {});
+			.run((err, context) => (err ? console.log(err) : done()), {});
 	});
 
 	it("Use should accept multiple values", (done) => {
@@ -119,7 +119,7 @@ describe("Middleware flow test", () => {
 				assert.equal(c, 3);
 				next();
 			})
-			.process(
+			.run(
 				(err, context) => (err ? console.log(err) : done()),
 				1,
 				2,
@@ -144,7 +144,7 @@ describe("Middleware flow test", () => {
 				assert.equal(context.c, 30);
 				next();
 			})
-			.process((err, context) => (err ? console.log(err) : done()), {
+			.run((err, context) => (err ? console.log(err) : done()), {
 				a: 1,
 				b: 2,
 				c: 3,
@@ -156,7 +156,7 @@ describe("Middleware flow test", () => {
 		let m2 = (context, next) => next();
 		new Middleware()
 			.use(m1, m2)
-			.process((err, context) => (err ? console.log(err) : done()), null);
+			.run((err, context) => (err ? console.log(err) : done()), null);
 	});
 
 	it("Use should accept array of middlwares", (done) => {
@@ -164,7 +164,7 @@ describe("Middleware flow test", () => {
 		let m2 = (context, next) => next();
 		new Middleware()
 			.use([m1, m2])
-			.process((err, context) => (err ? console.log(err) : done()), null);
+			.run((err, context) => (err ? console.log(err) : done()), null);
 	});
 
 	it("Use should mix of comma seperated, array and single middlwares", (done) => {
@@ -172,6 +172,6 @@ describe("Middleware flow test", () => {
 		let m2 = (context, next) => next();
 		new Middleware()
 			.use(m1, [m1, m2], [m1], m2)
-			.process((err, context) => (err ? console.log(err) : done()), null);
+			.run((err, context) => (err ? console.log(err) : done()), null);
 	});
 });

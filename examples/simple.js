@@ -10,13 +10,13 @@ m.use((context, next) => {
 	next();
 })
 
-// Async await middleware
-.use(async (context, next) => {
-	await sleep(2000);
-	console.log("M2 context", context);
-	context.exec = "M2 executed in 2 seconds";
-	next();
-});
+	// Async await middleware
+	.use(async (context, next) => {
+		await sleep(2000);
+		console.log("M2 context", context);
+		context.exec = "M2 executed in 2 seconds";
+		next();
+	});
 
 // Async await middleware
 let m3 = async (context, next) => {
@@ -55,9 +55,8 @@ m.use(m3, [m4, m5]);
 
 // m.use(errorMiddleware)
 
-let context = {};
-
-m.process((err, context) => {
-	if (err) console.log("error!", err, context);
-	else console.log("Complete!", context);
-}, context);
+(async () => {
+	let context = {};
+	let result = await m.process(context);
+	console.log(result);
+})();

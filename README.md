@@ -80,9 +80,18 @@ m.use(m3, [m4, m5]);
 
 // m.use(errorMiddleware)
 
-let context = {};
+(async () => {
+	let context = {};
+	let result = await m.process(context);
+	console.log(result);
+})();
 
-m.process((err, context) => {
+```
+or
+
+```js
+let context = {};
+m.run((err, context) => {
 	if (err) console.log("error!", err, context);
 	else console.log("Complete!", context);
 }, context);
@@ -96,8 +105,7 @@ const Middleware = require("umid");
 let m = new Middleware();
 
 // Pass string in next to create an error
-m
-    .use((context, next) => {
+m.use((context, next) => {
 	    next("Try again");
     })
 
@@ -123,10 +131,16 @@ m
 		console.log("I never get executed :(");
 	})
 
-	.process((err, context) => {
-		if (err) console.log(err, context);
-		else console.log("Complete!", context);
-	}, {});
+	(async () => {
+		let context = {};
+		try {
+			let result = await m.process(context);
+			console.log(result);	
+		} catch (error) {
+			console.error(error);
+		}
+		
+	})();
 
 ```
 
@@ -164,7 +178,15 @@ Type: Function
 
 Most importantly, a middleware must either call next() or terminate the response with next('reason').
 
-#### process((err, context), initialContext)
+#### run(initialContext)
+
+Type: async Function. Returns updated context
+
+### initialContext
+
+This is for assigning the middlewares with intial context object to pass.
+
+### process((err, context), initialContext)
 
 ### (err, context)
 
@@ -172,7 +194,7 @@ Type: Function
 
 Its signature is (err, context), where err is the String or Error thrown by the middleware.
 
-### intialContext
+### initialContext
 
 This is for assigning the middlewares with intial context object to pass.
 
