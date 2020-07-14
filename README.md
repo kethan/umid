@@ -6,6 +6,7 @@ Fast, lightweight middleware framework.
 
 * **Lightweight** - less than 370 bytes minified
 * **Browser and Node** - Use in browser and node
+* **Async Await and Promise support** - Support both async await and promise functions
 * **No Dependency** - No Bloating. No external dependencies
 * **Express.js style middlware** - Express.js like design
 
