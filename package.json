@@ -1,26 +1,30 @@
 {
-	"name": "umid",
-	"version": "1.0.0",
-	"description": "A generic and lightweight express like middleware with zero dependencies",
-	"main": "index.js",
-	"directories": {
-		"example": "examples",
-		"test": "test"
-	},
-	"scripts": {
-		"test": "mocha test/index.js"
-	},
-	"keywords": [
-		"middleware",
-		"express",
-		"use",
-		"pipes",
-		"pipe"
+  "name": "umid",
+  "version": "1.0.0",
+  "description": "A generic and lightweight express like middleware with zero dependencies",
+  "main": "index.js",
+  "directories": {
+    "example": "examples",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha test/index.js"
+  },
+  "keywords": [
+    "middleware",
+    "express",
+    "use",
+    "pipes",
+    "pipe"
   ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/kethan/umid.git"
   },
-	"author": "Kethan Surana",
-	"license": "MIT"
+  "author": "Kethan Surana",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kethan/umid/issues"
+  },
+  "homepage": "https://github.com/kethan/umid#readme"
 }
