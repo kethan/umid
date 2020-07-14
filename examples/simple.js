@@ -21,16 +21,20 @@ let m3 = async (context, next) => {
 	next();
 };
 
-let m4 = async (context, next) => {
-	console.log("M4 context", context);
-	context.exec = "M4 executed";
-	next();
+let m4 = (context, next) => {
+	setTimeout(() => {
+		console.log("M4 context", context);
+		context.exec = "M4 executed in 2 second";
+		next();
+	}, 2000);
 };
 
 let m5 = async (context, next) => {
-	console.log("M5 context", context);
-	context.exec = "M5 executed";
-	next();
+	Promise.resolve().then(() => {
+		console.log("M5 context", context);
+		context.exec = "M5 executed";
+		next();
+	});
 };
 
 let errorMiddleware = async (context, next) => {
