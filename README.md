@@ -95,8 +95,9 @@ const Middleware = require("umid");
 
 let m = new Middleware();
 
-// Pass string in next
-m.use((context, next) => {
+// Pass string in next to create an error
+m
+    .use((context, next) => {
 	    next("Try again");
     })
 
@@ -106,12 +107,12 @@ m.use((context, next) => {
 		throw new Error("Try again");
 	})
 
-    // Throw error string
+	// Throw error string
 
 	.use((context, next) => {
 		throw "Try again";
-    })
-    
+	})
+
 	// throw error in next function
 
 	.use((context, next) => {
