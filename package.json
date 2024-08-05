@@ -1,8 +1,27 @@
 {
 	"name": "umid",
-	"version": "1.1.0",
+	"version": "2.0.0",
 	"description": "A generic and lightweight express like middleware with zero dependencies",
-	"main": "src/index.js",
+	"main": "./dist/index.js",
+	"type": "module",
+	"module": "./dist/index.es.js",
+	"unpkg": "./dist/index.min.js",
+	"umd:main": "./dist/index.umd.js",
+	"exports": {
+		".": {
+			"browser": "./dist/index.es.js",
+			"umd": "./dist/index.umd.js",
+			"require": "./dist/index.js",
+			"import": "./dist/index.es.js",
+			"default": "./dist/index.es.js"
+		}
+	},
+	"scripts": {
+		"build": "rollup --config rollup.config.js"
+	},
+	"files": [
+		"dist"
+	],
 	"keywords": [
 		"middleware",
 		"express",
@@ -19,5 +38,9 @@
 	"bugs": {
 		"url": "https://github.com/kethan/umid/issues"
 	},
-	"homepage": "https://github.com/kethan/umid#readme"
+	"homepage": "https://github.com/kethan/umid#readme",
+	"devDependencies": {
+		"@rollup/plugin-terser": "^0.4.4",
+		"rollup": "^4.20.0"
+	}
 }

@@ -1,6 +1,24 @@
-# Async Function Runner
+# Universal Middleware
 
-The `run` function is a utility for managing asynchronous function execution in different modes. It can handle an array of functions, either flattening them, calling them sequentially, and optionally using a `next` callback.
+Fast, lightweight middleware framework.
+
+# Features
+
+* **Lightweight** - less than 370 bytes minified
+* **Browser and Node** - Use in browser and node
+* **Async Await and Promise support** - Support both async await and promise functions
+* **No Dependency** - No Bloating. No external dependencies
+* **Express.js style middlware** - Express.js like design
+
+[![Version](https://img.shields.io/npm/v/ulive.svg?color=success&style=flat-square)](https://www.npmjs.com/package/ulive) [![Badge size](https://deno.bundlejs.com/badge?q=ulive&treeshake=[*]&config={"compression":"brotli"})](https://unpkg.com/ulive) [![Badge size](https://deno.bundlejs.com/badge?q=ulive&treeshake=[*]&config={"compression":"gzip"})](https://unpkg.com/ulive)
+
+**yarn**: `yarn add umid`
+
+**npm**: `npm i umid`
+
+**cdn**: https://unpkg.com/umid
+
+**module**: https://unpkg.com/umid?module
 
 ## Installation
 
