@@ -1,238 +1,113 @@
-# Universal Middleware
+# Async Function Runner
 
-Fast, lightweight middleware framework.
+The `run` function is a utility for managing asynchronous function execution in different modes. It can handle an array of functions, either flattening them, calling them sequentially, and optionally using a `next` callback.
 
-# Features
+## Installation
 
-* **Lightweight** - less than 370 bytes minified
-* **Browser and Node** - Use in browser and node
-* **Async Await and Promise support** - Support both async await and promise functions
-* **No Dependency** - No Bloating. No external dependencies
-* **Express.js style middlware** - Express.js like design
+To use this utility, simply import it into your project:
 
-# Install
-
+```javascript
+import { run } from "umid";
 ```
-$ npm install umid
 
-$ yarn add umid
+## Usage
+
+The `run` function accepts a mode and returns a function that accepts an array of functions to be executed asynchronously. The execution behavior depends on the mode specified.
+
+### Parameters
+
+-   `mode` (optional): Specifies the execution mode. Default is `0`.
+-   `...fns`: An array of functions to be executed.
+-   `...params`: Parameters to be passed to the functions.
+
+### Modes
+
+1. **Mode 0 (Default): Without `next`**
+2. **Mode 1: With `next`**
+3. **Mode 2: Both**
+
+### Examples
+
+#### Mode 0: Without `next`
+
+In this mode, the functions are called sequentially without a `next` callback.
+
+```javascript
+const runWithoutNext = run(0);
+
+const fn1 = async (param1, param2) => {
+	console.log("fn1", param1, param2);
+	return "result1";
+};
+
+const fn2 = async (param1, param2) => {
+	console.log("fn2", param1, param2);
+	return "result2";
+};
+
+runWithoutNext(fn1, fn2)("hello", "world")
+	.then((result) => console.log("Final result:", result))
+	.catch((err) => console.error("Error:", err));
 ```
-# Usage
 
-## Basic Example
+#### Mode 1: With `next`
 
-```js
-const Middleware = require("umid");
+In this mode, the functions are called sequentially with a `next` callback, which must be called to proceed to the next function.
 
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+```javascript
+const runWithNext = run(1);
 
-let m = new Middleware();
-
-// Plain middleware
-m.use((context, next) => {
-	console.log("M1 context", context);
-	context.exec = "M1 executed";
-	next();
-})
-
-// Async await middleware
-.use(async (context, next) => {
-	await sleep(2000);
-	console.log("M2 context", context);
-	context.exec = "M2 executed in 2 seconds";
-	next();
-});
-
-// Async await middleware
-let m3 = async (context, next) => {
-	await sleep(500);
-	await sleep(500);
-	console.log("M3 context", context);
-	context.exec = "M3 executed in 1 second";
-	next();
-};
-
-// settimeout middleware
-let m4 = (context, next) => {
-	setTimeout(() => {
-		console.log("M4 context", context);
-		context.exec = "M4 executed in 2 second";
-		next();
-	}, 2000);
-};
-
-// Promise middleware
-let m5 = async (context, next) => {
-	Promise.resolve().then(() => {
-		console.log("M5 context", context);
-		context.exec = "M5 executed";
-		next();
-	});
-};
-
-// Error middleware
-let errorMiddleware = async (context, next) => {
-	throw "got error!!";
+const fn1 = async (param1, param2, next) => {
+	console.log("fn1", param1, param2);
 	next();
 };
 
-m.use(m3, [m4, m5]);
+const fn2 = async (param1, param2, next) => {
+	console.log("fn2", param1, param2);
+	next();
+};
 
-// m.use(errorMiddleware)
-
-(async () => {
-	let context = {};
-	let result = await m.process(context);
-	console.log(result);
-})();
-
-```
-or
-
-```js
-let context = {};
-m.run((err, context) => {
-	if (err) console.log("error!", err, context);
-	else console.log("Complete!", context);
-}, context);
+runWithNext(fn1, fn2)("hello", "world")
+	.then(() => console.log("All functions executed"))
+	.catch((err) => console.error("Error:", err));
 ```
 
-## Error Middleware example
+#### Mode 2: Both
 
-```js
-const Middleware = require("umid");
+In this mode, the functions are called sequentially and can choose whether to call `next` or return a result. If a function returns a result, the chain is resolved with that result.
 
-let m = new Middleware();
+```javascript
+const runBoth = run(2);
 
-// Pass string in next to create an error
-m.use((context, next) => {
-	    next("Try again");
-    })
+const fn1 = async (param1, param2, next) => {
+	console.log("fn1", param1, param2);
+	next();
+};
 
-	// Throw an error
+const fn2 = async (param1, param2) => {
+	console.log("fn2", param1, param2);
+	return "result2";
+};
 
-	.use((context, next) => {
-		throw new Error("Try again");
-	})
-
-	// Throw error string
-
-	.use((context, next) => {
-		throw "Try again";
-	})
-
-	// throw error in next function
-
-	.use((context, next) => {
-		next(new Error("Try again"));
-	})
-
-	.use((context, next) => {
-		console.log("I never get executed :(");
-	})
-
-	(async () => {
-		let context = {};
-		try {
-			let result = await m.process(context);
-			console.log(result);	
-		} catch (error) {
-			console.error(error);
-		}
-		
-	})();
-
+runBoth(fn1, fn2)("hello", "world")
+	.then((result) => console.log("Final result:", result))
+	.catch((err) => console.error("Error:", err));
 ```
 
-# API
+## API
 
-### Middleware()
+### `run(mode) => (...fns) => async (...params) => Promise`
 
-Returns an instance of a middleware
+#### Parameters:
 
-### use((context, next))
+-   `mode`: Number (optional) - Execution mode (0, 1, or 2). Default is `0`.
+-   `...fns`: Array - Functions to be executed.
+-   `...params`: Array - Parameters to be passed to the functions.
 
-Attach middleware(s).
+#### Returns:
 
-These are the different signatures for use function
+-   `Promise`: Resolves when all functions are executed or when a function returns a result (in mode 0 or 2).
 
-#### use(...middlewares)
-#### use(middleware)
-#### use([middleware1, middleware2])
-#### use(middleware1, middleware2)
-#### use(middleware1, [middleware2, middleware3], middlware4)
+## License
 
-### middleware
-
-This is the signature for defining middleware.
-
-(context, next)
-
-#### context
-
-The context that passes to the next middleware. This can be updated and passed on to next middleware.
-
-#### next
-
-Type: Function
-
-Most importantly, a middleware must either call next() or terminate the response with next('reason').
-
-#### run(initialContext)
-
-Type: async Function. Returns updated context
-
-### initialContext
-
-This is for assigning the middlewares with intial context object to pass.
-
-### process((err, context), initialContext)
-
-### (err, context)
-
-Type: Function
-
-Its signature is (err, context), where err is the String or Error thrown by the middleware.
-
-### initialContext
-
-This is for assigning the middlewares with intial context object to pass.
-
-### Middleware Errors
-
-If an error arises within a middleware, the loop will be exited. This means that no other middleware will execute.
-
-There are three ways to "throw" an error from within a middleware function.
-
-1. Pass any string to next('Err')
-
-This will exit the loop with your error string as the error message.
-
-```js
-new Middleware().use((context, next) => {
-  next('Try again');
-});
-```
-
-2. Pass an Error to next()
-
-This is similar to the above option.
-
-```js
-new Middleware().use((context, next) => {
-  let err = new Error('Try again');
-  next(err);
-});
-```
-3. Terminate with throw
-
-```js
-new Middleware().use((context, next) => {
-  let err = new Error('Try again');
-  throw err;
-});
-```
-
-# License
-
-MIT © Kethan Surana
+This project is licensed under the MIT License. See the LICENSE file for details.

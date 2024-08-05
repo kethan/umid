@@ -1,36 +1,18 @@
-module.exports = class Middleware {
-	constructor() {
-		this._fns = [];
-	}
-
-	use(...fns) {
-		fns.map((f) =>
-			Array.isArray(f) ? this._fns.push(...f) : this._fns.push(f)
-		);
-		return this;
-	}
-
-	run(onerror, ...params) {
-		try {
-			let middleware = this._fns.shift();
-			middleware
-				? middleware(...params, (err) =>
-						err
-							? onerror(err, ...params)
-							: this.run(onerror, ...params)
-				  )
-				: onerror(null, ...params);
-		} catch (err) {
-			onerror(err, ...params);
-		}
-	}
-
-	process(...params) {
-		return new Promise((resolve, reject) => {
-			this.run((err, context) => {
-				if (err) reject(err);
-				else resolve(context);
-			}, ...params);
-		});
-	}
-};
+export const run =
+	(mode = 0) =>
+		(...fns) =>
+			async (...params) =>
+				new Promise((resolve, reject) => {
+					fns = fns.flat(1 / 10).filter(fn => fn?.call);
+					let i = 0;
+					let loop = async () => {
+						if (i >= fns.length) return resolve();
+						let fn = fns[i++];
+						let argsCount = fn.length <= params.length;
+						let result = mode === 1 ? await fn(...params, next) : await fn(...params, !argsCount && next);
+						if (mode !== 1 && result) return resolve(result);
+						if (mode !== 1 && argsCount) await next();
+					};
+					let next = (err) => err ? reject(err) : loop().catch(next);
+					next();
+				});
