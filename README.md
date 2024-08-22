@@ -4,7 +4,8 @@ Fast, lightweight middleware framework.
 
 # Features
 
-* **Lightweight** - less than 370 bytes minified
+* **Lightweight** - [![Badge size](https://deno.bundlejs.com/badge?q=umid&treeshake=[*]&config={"compression":"brotli"})](https://unpkg.com/umid)
+
 * **Browser and Node** - Use in browser and node
 * **Async Await and Promise support** - Support both async await and promise functions
 * **No Dependency** - No Bloating. No external dependencies
@@ -55,7 +56,6 @@ const runWithoutNext = run(0);
 
 const fn1 = async (param1, param2) => {
 	console.log("fn1", param1, param2);
-	return "result1";
 };
 
 const fn2 = async (param1, param2) => {
