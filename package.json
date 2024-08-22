@@ -1,6 +1,6 @@
 {
 	"name": "umid",
-	"version": "3.0.0",
+	"version": "3.0.1",
 	"description": "A generic and lightweight express like middleware with zero dependencies",
 	"main": "./dist/index.js",
 	"type": "module",

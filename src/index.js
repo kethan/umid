@@ -1,5 +1,5 @@
 export const run = (mode = 2, next, i = 0, fn, result) => (...fns) => async (...args) => {
-	fns = fns.flat(1 / 0).filter(fn => fn.call);
+	fns = fns.flat(1 / 0).filter(fn => fn?.call);
 	return (next = async err => {
 		if (err) throw err;
 		if (i < fns.length) {
