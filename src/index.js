@@ -1,6 +1,6 @@
-export const run = (mode = 0, next, i = 0, fn, result) => (...fns) => async (...args) => {
-	fns = fns.flat().filter(fn => fn.call);
-	 next = async err => {
+export const run = (mode = 2, next, i = 0, fn, result) => (...fns) => async (...args) => {
+	fns = fns.flat(1 / 0).filter(fn => fn.call);
+	return (next = async err => {
 		if (err) throw err;
 		if (i < fns.length) {
 			fn = fns[i++];
@@ -8,6 +8,5 @@ export const run = (mode = 0, next, i = 0, fn, result) => (...fns) => async (...
 			if (mode !== 1 && result) return result;
 			if (mode !== 1 && fn.length <= args.length) return await next();
 		}
-	}
-	return next();
+	})()
 };

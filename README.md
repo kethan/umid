@@ -4,12 +4,12 @@ Fast, lightweight middleware framework.
 
 # Features
 
-* **Lightweight** - [![Badge size](https://deno.bundlejs.com/badge?q=umid&treeshake=[*]&config={"compression":"brotli"})](https://unpkg.com/umid)
+-   **Lightweight** - [![Badge size](https://deno.bundlejs.com/badge?q=umid&treeshake=[*]&config={"compression":"brotli"})](https://unpkg.com/umid)
 
-* **Browser and Node** - Use in browser and node
-* **Async Await and Promise support** - Support both async await and promise functions
-* **No Dependency** - No Bloating. No external dependencies
-* **Express.js style middlware** - Express.js like design
+-   **Browser and Node** - Use in browser and node
+-   **Async Await and Promise support** - Support both async await and promise functions
+-   **No Dependency** - No Bloating. No external dependencies
+-   **Express.js style middlware** - Express.js like design
 
 [![Version](https://img.shields.io/npm/v/umid.svg?color=success&style=flat-square)](https://www.npmjs.com/package/umid) [![Badge size](https://deno.bundlejs.com/badge?q=umid&treeshake=[*]&config={"compression":"brotli"})](https://unpkg.com/umid) [![Badge size](https://deno.bundlejs.com/badge?q=umid&treeshake=[*]&config={"compression":"gzip"})](https://unpkg.com/umid)
 
@@ -35,15 +35,15 @@ The `run` function accepts a mode and returns a function that accepts an array o
 
 ### Parameters
 
--   `mode` (optional): Specifies the execution mode. Default is `0`.
+-   `mode` (optional): Specifies the execution mode. Default is `2`.
 -   `...fns`: An array of functions to be executed.
--   `...params`: Parameters to be passed to the functions.
+-   `...args`: Parameters to be passed to the functions.
 
 ### Modes
 
-1. **Mode 0 (Default): Without `next`**
+1. **Mode 0: Without `next`**
 2. **Mode 1: With `next`**
-3. **Mode 2: Both**
+3. **Mode 2: (Default) Both**
 
 ### Examples
 
@@ -114,13 +114,13 @@ runBoth(fn1, fn2)("hello", "world")
 
 ## API
 
-### `run(mode) => (...fns) => async (...params) => Promise`
+### `run(mode) => (...fns) => async (...args) => Promise`
 
 #### Parameters:
 
 -   `mode`: Number (optional) - Execution mode (0, 1, or 2). Default is `0`.
 -   `...fns`: Array - Functions to be executed.
--   `...params`: Array - Parameters to be passed to the functions.
+-   `...args`: Array - Parameters to be passed to the functions.
 
 #### Returns:
 
