@@ -1,12 +1,14 @@
-export const run = (mode = 2, next, i = 0, fn, result) => (...fns) => async (...args) => {
-	fns = fns.flat(1 / 0).filter(fn => fn?.call);
-	return (next = async err => {
-		if (err) throw err;
-		if (i < fns.length) {
-			fn = fns[i++];
-			result = await fn(...args, !fn.length <= args.length && next);
-			if (mode !== 1 && result) return result;
-			if (mode !== 1 && fn.length <= args.length) return await next();
-		}
-	})()
-};
+export const run =
+	(mode = 0, next, loop, i = 0, result) =>
+		(...fns) =>
+			(...args) =>
+				new Promise((resolve, reject) => {
+					fns = fns.flat(1 / 0).filter(fn => fn?.call);
+					loop = async () => {
+						if (i >= fns.length) return resolve();
+						result = mode ? await fns[i++](...args, next) : await fns[i++](...args);
+						if (!mode && result) return resolve(result);
+						if (!mode) await next();
+					};
+					(next = (err) => err ? reject(err) : loop().catch(next))()
+				});

@@ -35,15 +35,14 @@ The `run` function accepts a mode and returns a function that accepts an array o
 
 ### Parameters
 
--   `mode` (optional): Specifies the execution mode. Default is `2`.
+-   `mode` (optional): Specifies the execution mode. Default is `0`.
 -   `...fns`: An array of functions to be executed.
 -   `...args`: Parameters to be passed to the functions.
 
 ### Modes
 
-1. **Mode 0: Without `next`**
+1. **Mode 0: (Default) Without `next`**
 2. **Mode 1: With `next`**
-3. **Mode 2: (Default) Both**
 
 ### Examples
 
@@ -83,6 +82,7 @@ const fn1 = async (param1, param2, next) => {
 const fn2 = async (param1, param2, next) => {
 	console.log("fn2", param1, param2);
 	next();
+	// next('not authorized'); // not authorized error
 };
 
 runWithNext(fn1, fn2)("hello", "world")
@@ -90,26 +90,31 @@ runWithNext(fn1, fn2)("hello", "world")
 	.catch((err) => console.error("Error:", err));
 ```
 
-#### Mode 2: Both
+### Creating a express middleware utility
 
-In this mode, the functions are called sequentially and can choose whether to call `next` or return a result. If a function returns a result, the chain is resolved with that result.
+```js
+const expressMiddleware = run(1);
 
-```javascript
-const runBoth = run(2);
-
-const fn1 = async (param1, param2, next) => {
-	console.log("fn1", param1, param2);
-	next();
+const fn1 = async (req) => {
+	console.log('fn1');
 };
 
-const fn2 = async (param1, param2) => {
-	console.log("fn2", param1, param2);
-	return "result2";
+const fn2 = async (req) => {
+	console.log('fn2');
 };
 
-runBoth(fn1, fn2)("hello", "world")
-	.then((result) => console.log("Final result:", result))
-	.catch((err) => console.error("Error:", err));
+const expressMiddleware = (req, res, next) => {
+	console.log('ex middleware', req, res, next);
+	setTimeout(() => {
+		next();
+	}, 1000)
+}
+const fn3 = async (req) => "over";
+const req = {};
+const res = {};
+
+run()(fn1, expressMiddleware(expressMiddleware), fn2, fn3)(req, res).then(console.log).catch(console.log);
+
 ```
 
 ## API
@@ -118,13 +123,13 @@ runBoth(fn1, fn2)("hello", "world")
 
 #### Parameters:
 
--   `mode`: Number (optional) - Execution mode (0, 1, or 2). Default is `0`.
+-   `mode`: Number (optional) - Execution mode (0, 1). Default is `0`.
 -   `...fns`: Array - Functions to be executed.
 -   `...args`: Array - Parameters to be passed to the functions.
 
 #### Returns:
 
--   `Promise`: Resolves when all functions are executed or when a function returns a result (in mode 0 or 2).
+-   `Promise`: Resolves when all functions are executed or when a function returns a result (in mode 0).
 
 ## License
 
