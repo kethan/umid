@@ -264,7 +264,7 @@ describe('Mode 1: Always Call Next', () => {
 
         const execute = run(1); // Mode 1
 
-        expect(() => execute(mockFn1, mockFn2)('test')).rejects.toThrow('Error in mockFn1')
+        await expect(execute(mockFn1, mockFn2)('test')).rejects.toThrow('Error in mockFn1')
 
         expect(mockFn1).toHaveBeenCalledWith('test', expect.any(Function));
         expect(mockFn2).not.toHaveBeenCalled()
@@ -310,7 +310,7 @@ describe('Mode 1: Always Call Next', () => {
 
         const execute = run(1); // Mode 1
 
-        expect(() => execute(mockFn1, mockFn2, mockFn3)('test')).rejects.toThrow('Error in mockFn2')
+        await expect(execute(mockFn1, mockFn2, mockFn3)('test')).rejects.toThrow('Error in mockFn2')
 
         expect(mockFn1).toHaveBeenCalledWith('test', expect.any(Function));
         expect(mockFn2).toHaveBeenCalledWith('test', expect.any(Function));
@@ -335,7 +335,7 @@ describe('Mode 1: Always Call Next', () => {
 
         const execute = run(1); // Mode 1
 
-        expect(() => execute(mockFn1, mockFn2, mockFn3)('test')).rejects.toThrow('Error in mockFn1');
+        await expect(execute(mockFn1, mockFn2, mockFn3)('test')).rejects.toThrow('Error in mockFn1');
 
         // Ensure all functions are called and `next` is used
         expect(mockFn1).toHaveBeenCalledWith('test', expect.any(Function));
