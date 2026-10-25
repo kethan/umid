@@ -18,11 +18,20 @@
 	},
 	"scripts": {
 		"build": "rollup --config rollup.config.js",
-		"test": "vitest"
+		"test": "vitest",
+		"test:watch": "vitest watch",
+		"test:coverage": "vitest run --coverage"
 	},
 	"files": [
-		"dist"
+		"dist",
+		"src/index.d.ts"
 	],
+	"types": "./src/index.d.ts",
+	"typeVersions": {
+		">=4.0.0": {
+			"src/index.d.ts": ["src/index.d.ts"]
+		}
+	},
 	"keywords": [
 		"middleware",
 		"express",
