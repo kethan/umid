@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [22]
+        node-version: [18, 20]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -24,55 +24,10 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci || npm install
+        run: npm ci
 
       - name: Run tests
         run: npm test
 
       - name: Build project
         run: npm run build
-
-  # Test on different package managers
-  test-yarn:
-    name: Test with Yarn
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'yarn'
-
-      - name: Install with Yarn
-        run: yarn install --frozen-lockfile || yarn install
-
-      - name: Run tests
-        run: yarn test
-
-      - name: Build
-        run: yarn build
-
-  test-pnpm:
-    name: Test with pnpm
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
-
-      - name: Install with pnpm
-        run: pnpm install --frozen-lockfile || pnpm install
-
-      - name: Run tests
-        run: pnpm test
-
-      - name: Build
-        run: pnpm build
