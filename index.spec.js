@@ -411,3 +411,177 @@ describe('Mode 1: Always Call Next', () => {
         expect(result).toBeUndefined(); // The behavior might vary
     });
 });
+
+describe('Nested Arrays and Flattening', () => {
+    it('should flatten nested arrays of functions', async () => {
+        const fn1 = vi.fn(async () => {});
+        const fn2 = vi.fn(async () => {});
+        const fn3 = vi.fn(async () => 'fn3');
+
+        const execute = run(0);
+        const result = await execute(fn1, [fn2, fn3])('test');
+
+        expect(fn1).toHaveBeenCalledWith('test');
+        expect(fn2).toHaveBeenCalledWith('test');
+        expect(fn3).toHaveBeenCalledWith('test');
+        expect(result).toBe('fn3');
+    });
+
+    it('should handle deeply nested arrays', async () => {
+        const fn1 = vi.fn(async () => {});
+        const fn2 = vi.fn(async () => {});
+        const fn3 = vi.fn(async () => {});
+        const fn4 = vi.fn(async () => 'result');
+
+        const execute = run(0);
+        const result = await execute(fn1, [fn2, [fn3, fn4]])('test');
+
+        expect(fn1).toHaveBeenCalled();
+        expect(fn2).toHaveBeenCalled();
+        expect(fn3).toHaveBeenCalled();
+        expect(fn4).toHaveBeenCalled();
+        expect(result).toBe('result');
+    });
+
+    it('should filter out non-functions from nested arrays', async () => {
+        const fn1 = vi.fn(async () => {});
+        const fn2 = vi.fn(async () => 'fn2');
+
+        const execute = run(0);
+        const result = await execute(fn1, [null, undefined, false, 0, {}, fn2])('test');
+
+        expect(fn1).toHaveBeenCalled();
+        expect(fn2).toHaveBeenCalled();
+        expect(result).toBe('fn2');
+    });
+});
+
+describe('Synchronous Functions', () => {
+    it('should handle synchronous functions in Mode 0', async () => {
+        const fn1 = vi.fn((x) => x + 1);
+        const fn2 = vi.fn((x) => x * 2);
+
+        const execute = run(0);
+        const result = await execute(fn1, fn2)(5);
+
+        expect(fn1).toHaveBeenCalledWith(5);
+        expect(fn2).not.toHaveBeenCalled();
+        expect(result).toBe(6);
+    });
+
+    it('should handle synchronous functions in Mode 1', async () => {
+        const fn1 = vi.fn((req, res, next) => {
+            next();
+        });
+        const fn2 = vi.fn((req, res, next) => {
+            next();
+        });
+
+        const execute = run(1);
+        const req = {};
+        const res = {};
+        await execute(fn1, fn2)(req, res);
+
+        expect(fn1).toHaveBeenCalledWith(req, res, expect.any(Function));
+        expect(fn2).toHaveBeenCalledWith(req, res, expect.any(Function));
+    });
+});
+
+describe('Error Handling Edge Cases', () => {
+    it('should handle errors in synchronous functions', async () => {
+        const fn1 = vi.fn(() => {
+            throw new Error('Sync error');
+        });
+        const fn2 = vi.fn(async () => {});
+
+        const execute = run(0);
+        await expect(execute(fn1, fn2)()).rejects.toThrow('Sync error');
+        expect(fn2).not.toHaveBeenCalled();
+    });
+
+    it('should handle non-Error objects thrown', async () => {
+        const fn1 = vi.fn(() => {
+            throw 'String error';
+        });
+        const fn2 = vi.fn(async () => {});
+
+        const execute = run(0);
+        await expect(execute(fn1, fn2)()).rejects.toThrow('String error');
+    });
+});
+
+describe('Data Processing Pipeline', () => {
+    it('should process data through a pipeline', async () => {
+        const validate = vi.fn(async (data) => {
+            if (typeof data.value !== 'number') {
+                throw new Error('Invalid data');
+            }
+        });
+
+        const normalize = vi.fn(async (data) => {
+            data.value = Math.abs(data.value);
+        });
+
+        const transform = vi.fn(async (data) => {
+            data.value = data.value * 2;
+        });
+
+        const markProcessed = vi.fn(async (data) => {
+            data.processed = true;
+            return data;
+        });
+
+        const pipeline = run(0);
+        const result = await pipeline(validate, normalize, transform, markProcessed)({ value: -5, processed: false });
+
+        expect(validate).toHaveBeenCalled();
+        expect(normalize).toHaveBeenCalled();
+        expect(transform).toHaveBeenCalled();
+        expect(markProcessed).toHaveBeenCalled();
+        expect(result).toEqual({ value: 10, processed: true });
+    });
+
+    it('should stop pipeline on error', async () => {
+        const validate = vi.fn(async (data) => {
+            if (!data) throw new Error('Missing data');
+        });
+
+        const normalize = vi.fn(async (data) => {
+            data.value = Math.abs(data.value);
+        });
+
+        const pipeline = run(0);
+        await expect(pipeline(validate, normalize)(null)).rejects.toThrow('Missing data');
+        expect(normalize).not.toHaveBeenCalled();
+    });
+});
+
+describe('Edge Cases', () => {
+    it('should handle functions that return falsy values', async () => {
+        const fn1 = vi.fn(async () => 0);
+        const fn2 = vi.fn(async () => false);
+        const fn3 = vi.fn(async () => '');
+        const fn4 = vi.fn(async () => 'success');
+
+        const execute = run(0);
+        const result = await execute(fn1, fn2, fn3, fn4)();
+
+        expect(fn1).toHaveBeenCalled();
+        expect(fn2).toHaveBeenCalled();
+        expect(fn3).toHaveBeenCalled();
+        expect(fn4).toHaveBeenCalled();
+        expect(result).toBe('success');
+    });
+
+    it('should handle empty array of functions', async () => {
+        const execute = run(0);
+        const result = await execute()();
+        expect(result).toBeUndefined();
+    });
+
+    it('should handle array with only non-functions', async () => {
+        const execute = run(0);
+        const result = await execute(null, undefined, 0, false, {}, [])();
+        expect(result).toBeUndefined();
+    });
+});
