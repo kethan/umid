@@ -2,9 +2,9 @@
 
 **Fast, lightweight middleware framework with zero dependencies.**
 
-[![Version](https://img.shields.io/npm/v/umid.svg?color=success&style=flat-square)](https://www.npmjs.com/package/umid) [![Badge size](https://deno.bundlejs.com/badge?q=umid&treeshake=[*]&config={"compression":"brotli"})](https://unpkg.com/umid) [![Badge size](https://deno.bundlejs.com/badge?q=umid&treeshake=[*]&config={"compression":"gzip"})](https://unpkg.com/umid) [![License](https://img.shields.io/npm/l/umid.svg)](https://github.com/kethan/umid/blob/master/LICENSE) [![TypeScript](https://img.shields.io/badge/TypeScript-Definitions-blue.svg)](https://github.com/kethan/umid)
+[![Version](https://img.shields.io/npm/v/umid.svg?color=success&style=flat-square)](https://www.npmjs.com/package/umid) [![Brotli Size](https://deno.bundlejs.com/badge?q=umid&treeshake=[*]&config={"compression":"brotli"})](https://unpkg.com/umid) [![Gzip Size](https://deno.bundlejs.com/badge?q=umid&treeshake=[*]&config={"compression":"gzip"})](https://unpkg.com/umid) [![License](https://img.shields.io/npm/l/umid.svg)](https://github.com/kethan/umid/blob/master/LICENSE) [![TypeScript](https://img.shields.io/badge/TypeScript-Definitions-blue.svg)](https://github.com/kethan/umid)
 
-**📦 Size**: ~1KB (minified), ~500 bytes (brotli compressed) - **Zero dependencies**
+**📦 Size**: ~500 bytes (brotli) | ~700 bytes (gzip) - **Zero dependencies**
 
 **🌐 Environments**: Browser, Node.js, Bun, Deno
 
@@ -47,11 +47,16 @@ npm i umid
   - [Mode 0: Sequential Execution](#mode-0-sequential-execution)
   - [Mode 1: Middleware with Next](#mode-1-middleware-with-next)
 - [Use Cases](#-use-cases)
-  - [Express-like Middleware](#express-like-middleware)
-  - [Data Processing Pipelines](#data-processing-pipelines)
-  - [Plugin Systems](#plugin-systems)
-  - [Request/Response Processing](#requestresponse-processing)
-  - [Context-based Middleware](#context-based-middleware)
+  - [Express-like Middleware](#1-express-like-middleware)
+  - [Data Processing Pipelines](#2-data-processing-pipelines)
+  - [Plugin Systems](#3-plugin-systems)
+  - [Request/Response Processing](#4-requestresponse-processing)
+  - [Context-based Middleware](#5-context-based-middleware)
+  - [API Gateway Middleware](#6-api-gateway-middleware)
+  - [Event Processing Pipeline](#7-event-processing-pipeline)
+  - [Validation Middleware Chain](#8-validation-middleware-chain)
+  - [Webhook Processor](#9-webhook-processor)
+  - [Caching Middleware](#10-caching-middleware)
 - [API Reference](#-api-reference)
 - [Examples](#-examples)
 - [Comparison](#-comparison)
@@ -420,6 +425,359 @@ await middleware(
 )(context);
 
 console.log(`Request completed in ${context.duration}ms`);
+```
+
+### 6. API Gateway Middleware
+
+Build a lightweight API gateway with request/response transformation:
+
+```javascript
+import { run } from 'umid';
+import http from 'http';
+
+const gateway = run(1);
+
+// Request logging
+const logRequest = async (req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  req.startTime = Date.now();
+  await next();
+};
+
+// Route matching
+const routeMatcher = async (req, res, next) => {
+  const [resource, id] = req.url.split('/').filter(Boolean);
+  req.resource = resource;
+  req.params = { id };
+  await next();
+};
+
+// Authentication
+const authenticate = async (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader) {
+    req.user = await validateToken(authHeader.split(' ')[1]);
+  }
+  await next();
+};
+
+// Rate limiting
+const rateLimiter = async (req, res, next) => {
+  const ip = req.socket.remoteAddress;
+  const limit = await rateLimitStore.increment(ip);
+  if (limit > 100) {
+    res.writeHead(429, { 'Content-Type': 'application/json' });
+    return next(new Error('Rate limit exceeded'));
+  }
+  await next();
+};
+
+// Handler
+const apiHandler = async (req, res, next) => {
+  const data = await handleRequest(req);
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify(data));
+  await next();
+};
+
+// Error handler
+const errorHandler = async (err, req, res, next) => {
+  console.error('Error:', err);
+  res.writeHead(500, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ error: err.message }));
+  await next();
+};
+
+// Create HTTP server
+const server = http.createServer((req, res) => {
+  gateway(
+    logRequest,
+    routeMatcher,
+    authenticate,
+    rateLimiter,
+    apiHandler,
+    errorHandler
+  )(req, res).catch(err => {
+    res.writeHead(500);
+    res.end('Internal Server Error');
+  });
+});
+
+server.listen(3000, () => console.log('API Gateway running on port 3000'));
+```
+
+### 7. Event Processing Pipeline
+
+Process events through a chain of handlers:
+
+```javascript
+import { run } from 'umid';
+
+const processEvent = run(0);
+
+// Event validation
+const validateEvent = async (event) => {
+  if (!event.type) throw new Error('Event type required');
+  if (!event.timestamp) event.timestamp = Date.now();
+};
+
+// Event enrichment
+const enrichEvent = async (event) => {
+  event.meta = {
+    ip: event.ip || 'unknown',
+    userAgent: event.userAgent || 'unknown',
+    region: await getRegion(event.ip)
+  };
+};
+
+// Event filtering
+const filterSensitive = async (event) => {
+  if (event.type === 'login') {
+    delete event.password;
+    delete event.token;
+  }
+};
+
+// Event normalization
+const normalizeEvent = async (event) => {
+  event.type = event.type.toLowerCase();
+  event.timestamp = new Date(event.timestamp).toISOString();
+};
+
+// Event persistence
+const saveEvent = async (event) => {
+  await analyticsStore.insert(event);
+  return { success: true, eventId: event.id };
+};
+
+// Process incoming event
+const result = await processEvent(
+  validateEvent,
+  enrichEvent,
+  filterSensitive,
+  normalizeEvent,
+  saveEvent
+)({
+  type: 'USER_LOGIN',
+  userId: 'user-123',
+  ip: '192.168.1.1',
+  userAgent: 'Mozilla/5.0'
+});
+
+console.log('Event processed:', result);
+```
+
+### 8. Validation Middleware Chain
+
+Create a chain of validators for form data:
+
+```javascript
+import { run } from 'umid';
+
+const validateForm = run(0);
+
+// Required field validation
+const required = (fields) => async (data) => {
+  for (const field of fields) {
+    if (!data[field]) {
+      throw new Error(`Field '${field}' is required`);
+    }
+  }
+};
+
+// Email validation
+const validateEmail = async (data) => {
+  if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+    throw new Error('Invalid email format');
+  }
+};
+
+// Password strength validation
+const validatePassword = async (data) => {
+  if (data.password && data.password.length < 8) {
+    throw new Error('Password must be at least 8 characters');
+  }
+};
+
+// Unique username validation
+const validateUniqueUsername = async (data) => {
+  if (data.username) {
+    const exists = await userStore.exists({ username: data.username });
+    if (exists) {
+      throw new Error('Username already taken');
+    }
+  }
+};
+
+// Sanitization
+const sanitize = async (data) => {
+  return {
+    username: data.username?.trim(),
+    email: data.email?.trim().toLowerCase(),
+    password: data.password
+  };
+};
+
+// Validate and sanitize form data
+try {
+  const cleanData = await validateForm(
+    required(['username', 'email', 'password']),
+    validateEmail,
+    validatePassword,
+    validateUniqueUsername,
+    sanitize
+  )({
+    username: '  john_doe  ',
+    email: 'JOHN@EXAMPLE.COM',
+    password: 'securePassword123'
+  });
+
+  console.log('Valid data:', cleanData);
+} catch (error) {
+  console.error('Validation failed:', error.message);
+}
+```
+
+### 9. Webhook Processor
+
+Process incoming webhooks from external services:
+
+```javascript
+import { run } from 'umid';
+import crypto from 'crypto';
+
+const processWebhook = run(1);
+
+// Verify signature (GitHub, Stripe, etc.)
+const verifySignature = async (req, res, next) => {
+  const signature = req.headers['x-hub-signature-256'];
+  const payload = JSON.stringify(req.body);
+  const expectedSignature = `sha256=${crypto
+    .createHmac('sha256', process.env.WEBHOOK_SECRET)
+    .update(payload)
+    .digest('hex')}`;
+  
+  if (signature !== expectedSignature) {
+    return next(new Error('Invalid signature'));
+  }
+  await next();
+};
+
+// Parse event type
+const parseEvent = async (req, res, next) => {
+  req.eventType = req.headers['x-github-event'] || req.body.type;
+  req.eventId = req.headers['x-github-delivery'] || req.body.id;
+  await next();
+};
+
+// Handle specific events
+const handlePushEvent = async (req, res, next) => {
+  if (req.eventType === 'push') {
+    const { repository, ref, commits } = req.body;
+    console.log(`New push to ${repository.full_name}@${ref}`);
+    for (const commit of commits) {
+      console.log(`  - ${commit.message} by ${commit.author.name}`);
+    }
+  }
+  await next();
+};
+
+const handlePullRequestEvent = async (req, res, next) => {
+  if (req.eventType === 'pull_request') {
+    const { action, pull_request } = req.body;
+    console.log(`PR ${action}: ${pull_request.title} (#${pull_request.number})`);
+  }
+  await next();
+};
+
+// Acknowledge receipt
+const acknowledge = async (req, res, next) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('OK');
+  await next();
+};
+
+// Process webhook
+const server = http.createServer((req, res) => {
+  let body = '';
+  req.on('data', chunk => body += chunk);
+  req.on('end', () => {
+    req.body = JSON.parse(body);
+    processWebhook(
+      verifySignature,
+      parseEvent,
+      handlePushEvent,
+      handlePullRequestEvent,
+      acknowledge
+    )(req, res).catch(err => {
+      console.error('Webhook error:', err);
+      res.writeHead(400);
+      res.end('Bad Request');
+    });
+  });
+});
+
+server.listen(8080, () => console.log('Webhook processor running on port 8080'));
+```
+
+### 10. Caching Middleware
+
+Implement a caching layer with middleware:
+
+```javascript
+import { run } from 'umid';
+
+const withCache = run(1);
+
+// Cache middleware
+const cacheMiddleware = (cache, options = {}) => {
+  const { ttl = 60 } = options;
+  
+  return async (req, res, next) => {
+    const key = req.url + JSON.stringify(req.query);
+    const cached = await cache.get(key);
+    
+    if (cached && !req.headers['no-cache']) {
+      res.writeHead(200, { 
+        'Content-Type': 'application/json',
+        'X-Cache': 'HIT'
+      });
+      return res.end(cached);
+    }
+    
+    // Cache miss - proceed and cache the response
+    const originalEnd = res.end;
+    const chunks = [];
+    
+    res.end = (data) => {
+      if (data) chunks.push(data);
+      const body = Buffer.concat(chunks).toString();
+      cache.set(key, body, ttl);
+      res.setHeader('X-Cache', 'MISS');
+      originalEnd.call(res, data);
+    };
+    
+    await next();
+  };
+};
+
+// Handler
+const handler = async (req, res, next) => {
+  const data = await fetchData(req.url);
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify(data));
+  await next();
+};
+
+// Create cached endpoint
+const cachedHandler = withCache(redisCache, { ttl: 300 });
+
+const server = http.createServer((req, res) => {
+  cachedHandler(handler)(req, res).catch(err => {
+    res.writeHead(500);
+    res.end('Internal Server Error');
+  });
+});
 ```
 
 ## 📖 API Reference
