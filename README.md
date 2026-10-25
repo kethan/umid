@@ -4,7 +4,7 @@
 
 [![Version](https://img.shields.io/npm/v/umid.svg?color=success&style=flat-square)](https://www.npmjs.com/package/umid) [![Brotli Size](https://deno.bundlejs.com/badge?q=umid&treeshake=[*]&config={"compression":"brotli"})](https://unpkg.com/umid) [![Gzip Size](https://deno.bundlejs.com/badge?q=umid&treeshake=[*]&config={"compression":"gzip"})](https://unpkg.com/umid) [![License](https://img.shields.io/npm/l/umid.svg)](https://github.com/kethan/umid/blob/master/LICENSE) [![TypeScript](https://img.shields.io/badge/TypeScript-Definitions-blue.svg)](https://github.com/kethan/umid)
 
-**📦 Size**: ~500 bytes (brotli) | ~700 bytes (gzip) - **Zero dependencies**
+**📦 Zero dependencies**
 
 **🌐 Environments**: Browser, Node.js, Bun, Deno
 
