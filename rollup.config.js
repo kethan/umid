@@ -6,10 +6,14 @@ const resolve = (pkg, input = "src/index", output = "dist/index") => ({
 		{
 			file: `${output}.es.js`,
 			format: 'es',
+			exports: 'named',
+			plugins: [terser()]
 		},
 		{
 			file: `${output}.cjs`,
 			format: 'cjs',
+			exports: 'named',
+			plugins: [terser()]
 		},
 		{
 			file: `${output}.min.js`,
@@ -30,6 +34,41 @@ const resolve = (pkg, input = "src/index", output = "dist/index") => ({
 	]
 });
 
+const resolveUtils = (input = "src/utils", output = "dist/utils") => ({
+	input: `${input}.js`,
+	output: [
+		{
+			file: `${output}.es.js`,
+			format: 'es',
+			exports: 'named',
+			plugins: [terser()]
+		},
+		{
+			file: `${output}.cjs`,
+			format: 'cjs',
+			exports: 'named',
+			plugins: [terser()]
+		},
+		{
+			file: `${output}.min.js`,
+			format: 'iife',
+			name: 'umidUtils',
+			strict: false,
+			compact: true,
+			plugins: [terser()]
+		},
+		{
+			file: `${output}.umd.js`,
+			format: 'umd',
+			name: 'umidUtils',
+			strict: false,
+			compact: true,
+			plugins: [terser()]
+		}
+	]
+});
+
 export default [
-	resolve("umid")
-]
+	resolve("umid"),
+	resolveUtils()
+];

@@ -119,7 +119,7 @@ await execute(logger, validator, transformer, finalizer)({ value: 5 });
 
 ### Mode 1: Middleware with Next
 
-In Mode 1, functions receive a `next` callback as the last parameter. You **must** call `next()` to proceed to the next function, or `next(error)` to stop execution with an error.
+In Mode 1, functions receive a `next` callback as the last parameter. You **must** call `next()` to proceed to the next function, or `next(error)` to stop execution with an error. The error can be an Error object or a string - both are valid.
 
 ```javascript
 import { run } from 'umid';
@@ -775,9 +775,327 @@ const cachedHandler = withCache(redisCache, { ttl: 300 });
 const server = http.createServer((req, res) => {
   cachedHandler(handler)(req, res).catch(err => {
     res.writeHead(500);
-    res.end('Internal Server Error');
+        res.end('Internal Server Error');
   });
 });
+```
+
+## 🧩 Utility Functions
+
+Inspired by [uqry](https://github.com/kethan/uqry)'s operator pattern, umid provides utility functions for combining and controlling middleware execution.
+
+### Mode Compatibility Summary
+
+| Category | Mode 0 (Return-based) | Mode 1 (next()-based) |
+|----------|----------------------|----------------------|
+| **Logical** | `or`, `not` | `and`, `before`, `after` |
+| **Parallel** | `race`, `all`, `any`, `parallel` | - |
+| **Sequential** | `sequence`, `pipe`, `waterfall` | - |
+| **Control Flow** | `retry`, `timeout`, `cache`, `validate`, `when`, `tap` | - |
+| **Additional** | `compose`, `apply`, `memoize`, `debounce`, `throttle`, `once`, `wrap`, `tryCatch`, `pass`, `skip`, `identity`, `noop` | - |
+
+> **Note:** Mode 1 utilities (`and`, `before`, `after`) use the Express-like middleware pattern where you must call `next()` or `next(error)`. All other utilities use Mode 0 (return-based) pattern.
+
+> **Error Handling in Mode 1:** You can pass either an Error object or a string to `next()`. Both `next(new Error('message'))` and `next('message')` work correctly.
+
+### Import
+
+```javascript
+import { run, and, or, not, when, retry, timeout } from 'umid';
+// or
+import * as utils from 'umid/utils';
+```
+
+### Logical Operators
+
+| Function | Mode | Description | Example |
+|----------|------|-------------|---------|
+| `and(...mw)` | 1 | All middleware must execute successfully (Express-style) | `and(auth, logger, rateLimit)` |
+| `or(...mw)` | 0 | First truthy result wins | `or(cache, db, fallback)` |
+| `not(mw)` | 0 | Inverts middleware behavior (truthy → undefined) | `not(auth)` |
+
+**Example: AND (Mode 1)**
+```javascript
+import { run, and } from 'umid';
+
+const middleware = and(
+    auth,
+    rateLimit,
+    cors
+);
+
+// All three middleware must call next() without error
+await middleware(req, res);
+```
+
+**Example: OR (Mode 0)**
+```javascript
+import { run, or } from 'umid';
+
+const middleware = or(
+    tryCache,
+    tryDatabase,
+    tryFallback
+);
+
+// Returns result of first middleware that returns truthy value
+const result = await middleware(ctx);
+```
+
+### Parallel Execution
+
+| Function | Mode | Description | Example |
+|----------|------|-------------|---------|
+| `race(...mw)` | 0 | First to complete wins | `race(fastPath, slowPath)` |
+| `all(...mw)` | 0 | All in parallel, returns array | `all(mw1, mw2, mw3)` |
+| `any(...mw)` | 0 | First success | `any(tryA, tryB, tryC)` |
+| `parallel(...mw)` | 0 | Execute all in parallel | `parallel(mw1, mw2)` |
+
+**Example: Race**
+```javascript
+import { run, race } from 'umid';
+
+const result = await race(
+    async () => fetchFromCache(),
+    async () => fetchFromAPI()
+)({});
+// Returns result from whichever completes first
+```
+
+**Example: All**
+```javascript
+import { run, all } from 'umid';
+
+const results = await all(
+    fetchUser,
+    fetchPosts,
+    fetchComments
+)({ userId: 1 });
+// results = [user, posts, comments]
+```
+
+### Sequential Execution
+
+| Function | Mode | Description | Example |
+|----------|------|-------------|---------|
+| `sequence(...mw)` | 0 | Sequential with result passing | `sequence(validate, transform)` |
+| `pipe(...mw)` | 0 | Single arg passing | `pipe(validate, save)` |
+| `waterfall(...mw)` | 0 | Sequential with result accumulation | `waterfall(mw1, mw2)` |
+
+**Example: Sequence**
+```javascript
+import { run, sequence } from 'umid';
+
+const result = await sequence(
+    validate,
+    sanitize,
+    transform,
+    save
+)({ data: 'raw' });
+// Each middleware receives the result of the previous one
+```
+
+**Example: Pipe**
+```javascript
+import { run, pipe } from 'umid';
+
+const result = await pipe(
+    validate,
+    normalize,
+    enrich
+)(rawData);
+// Single argument passed through each middleware
+```
+
+### Control Flow
+
+| Function | Mode | Description | Example |
+|----------|------|-------------|---------|
+| `retry(n, ms, mw)` | 0 | Retry on failure | `retry(3, 1000, fetch)` |
+| `timeout(ms, mw)` | 0 | Add timeout | `timeout(5000, fetch)` |
+| `cache(mw, getKey)` | 0 | Cache results | `cache(expensiveOp)` |
+| `validate(v, mw)` | 0 | Validate first | `validate(schema, handler)` |
+| `when(cond, mw, else)` | 0 | Conditional | `when(isAuth, auth, guest)` |
+| `tap(...mw)` | 0 | Side effects only | `tap(logger, handler)` |
+
+**Example: Retry**
+```javascript
+import { run, retry } from 'umid';
+
+const result = await retry(3, 1000, fetchData)({ url: '/api' });
+// Tries up to 3 times with 1 second delay between attempts
+```
+
+**Example: Timeout**
+```javascript
+import { run, timeout } from 'umid';
+
+const result = await timeout(5000, expensiveOperation)({});
+// Rejects with timeout error if operation takes > 5 seconds
+```
+
+**Example: When (Conditional)**
+```javascript
+import { run, when } from 'umid';
+
+const middleware = when(
+    ctx => ctx.user && ctx.user.role === 'admin',
+    adminMiddleware,
+    userMiddleware
+);
+
+await middleware(ctx);
+// Executes adminMiddleware if user is admin, otherwise userMiddleware
+```
+
+**Example: Cache**
+```javascript
+import { run, cache } from 'umid';
+
+const cachedFetch = cache(fetchData, (ctx) => ctx.url);
+
+const result1 = await cachedFetch({ url: '/api/data' });
+const result2 = await cachedFetch({ url: '/api/data' }); // Returns cached result
+```
+
+**Example: Tap (Side Effects)**
+```javascript
+import { run, tap } from 'umid';
+
+const middleware = tap(
+    logger,    // Executed for side effect
+    handler    // Result comes from this
+);
+
+const result = await middleware(ctx);
+// logger was called, but result is from handler
+```
+
+### Complete Example
+
+```javascript
+import { run, and, or, when, retry, timeout, validate } from 'umid';
+
+// Define middleware
+const validateUser = async (ctx, next) => {
+    if (!ctx.user) throw new Error('Unauthorized');
+    await next();
+};
+
+const rateLimit = async (ctx, next) => {
+    const limit = await checkRateLimit(ctx.ip);
+    if (limit.exceeded) throw new Error('Rate limited');
+    await next();
+};
+
+const fetchData = async (ctx, next) => {
+    ctx.data = await database.query(ctx.query);
+    await next();
+};
+
+// Compose middleware
+const apiMiddleware = and(
+    validateUser,
+    rateLimit,
+    when(
+        ctx => ctx.cache,
+        cache(fetchData),
+        retry(3, 1000, fetchData)
+    )
+);
+
+// Use it
+await apiMiddleware(req, res);
+```
+
+### Additional Utilities
+
+| Function | Mode | Description | Example |
+|----------|------|-------------|---------|
+| `compose(...mw)` | 0 | Alias for sequence | `compose(validate, transform)` |
+| `apply(value, ...mw)` | 0 | Apply middleware to a value | `apply(data, validate, save)` |
+| `memoize(mw, getKey)` | 0 | Memoize with cache | `memoize(expensiveOp)` |
+| `debounce(ms, mw)` | 0 | Debounce calls | `debounce(300, handler)` |
+| `throttle(ms, mw)` | 0 | Throttle calls | `throttle(1000, handler)` |
+| `once(mw)` | 0 | Execute only once | `once(initialize)` |
+| `before(beforeMw, mainMw)` | 1 | Execute before main | `before(logger, handler)` |
+| `after(mainMw, afterMw)` | 1 | Execute after main | `after(handler, logger)` |
+| `wrap(mw, hooks)` | 0 | Wrap with before/after hooks | `wrap(handler, { before, after })` |
+| `tryCatch(mw, errorMw)` | 0 | Try-catch wrapper | `tryCatch(handler, errorHandler)` |
+| `pass(...mw)` | 0 | Alias for tap | `pass(logger, handler)` |
+| `skip(cond, mw)` | 0 | Skip based on condition | `skip(isAuth, auth)` |
+| `identity(x)` | 0 | Returns input unchanged | `identity(data)` |
+| `noop()` | 0 | No operation | `noop()` |
+
+**Example: Memoize**
+```javascript
+import { memoize } from 'umid';
+
+const expensiveFetch = memoize(async (ctx) => {
+    const result = await fetchData(ctx.url);
+    return result;
+});
+
+// First call executes the function
+const result1 = await expensiveFetch({ url: '/api/data' });
+
+// Second call with same args returns cached result
+const result2 = await expensiveFetch({ url: '/api/data' });
+```
+
+**Example: Debounce**
+```javascript
+import { debounce } from 'umid';
+
+const debouncedSearch = debounce(300, async (ctx) => {
+    const results = await search(ctx.query);
+    return results;
+});
+
+// Multiple rapid calls will be debounced
+debouncedSearch({ query: 'a' });
+debouncedSearch({ query: 'ab' });
+debouncedSearch({ query: 'abc' });
+// Only the last call executes after 300ms
+```
+
+**Example: Try-Catch**
+```javascript
+import { tryCatch } from 'umid';
+
+const safeFetch = tryCatch(
+    async (ctx) => fetchData(ctx.url),
+    async (err, ctx) => {
+        console.error('Fetch failed:', err);
+        return { error: err.message };
+    }
+);
+
+const result = await safeFetch({ url: '/api/data' });
+// Either returns data or { error: ... }
+```
+
+**Example: Wrap with Hooks**
+```javascript
+import { wrap } from 'umid';
+
+const withTiming = wrap(
+    async (ctx) => {
+        // Main middleware
+        return await processData(ctx);
+    },
+    {
+        before: async (ctx) => {
+            ctx.startTime = Date.now();
+        },
+        after: async (ctx) => {
+            ctx.duration = Date.now() - ctx.startTime;
+            console.log('Processing took:', ctx.duration, 'ms');
+        }
+    }
+);
+
+const result = await withTiming(ctx);
 ```
 
 ## 📖 API Reference

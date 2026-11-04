@@ -14,7 +14,15 @@
 			"require": "./dist/index.js",
 			"import": "./dist/index.es.js",
 			"default": "./dist/index.es.js"
-		}
+		},
+		"./utils": {
+			"browser": "./dist/utils.es.js",
+			"umd": "./dist/utils.umd.js",
+			"require": "./dist/utils.js",
+			"import": "./dist/utils.es.js",
+			"default": "./dist/utils.es.js"
+		},
+		"./utils.d.ts": "./src/utils.d.ts"
 	},
 	"scripts": {
 		"build": "rollup --config rollup.config.js",
@@ -24,13 +32,17 @@
 	},
 	"files": [
 		"dist",
-		"src/index.d.ts"
+		"src/index.d.ts",
+		"src/utils.d.ts"
 	],
 	"types": "./src/index.d.ts",
 	"typeVersions": {
 		">=4.0.0": {
 			"src/index.d.ts": [
 				"src/index.d.ts"
+			],
+			"src/utils.d.ts": [
+				"src/utils.d.ts"
 			]
 		}
 	},
