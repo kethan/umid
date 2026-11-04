@@ -1187,7 +1187,7 @@ const handler: MiddlewareFunction<[Request, Response, NextFunction]> = async (re
 | Feature | umid | Express.js | Koa | Connect |
 |---------|------|-----------|-----|---------|
 | **Dependencies** | 0 | ~30 | ~10 | ~5 |
-| **Size** | ~1KB | ~50KB | ~5KB | ~2KB |
+| **Size** | **195 bytes gzipped** | ~50KB | ~5KB | ~2KB |
 | **Middleware Pattern** | ✅ | ✅ | ✅ | ✅ |
 | **Async/Await** | ✅ | ✅ | ✅ | ✅ |
 | **Browser Support** | ✅ | ❌ | ✅ | ❌ |
