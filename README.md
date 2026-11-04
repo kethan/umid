@@ -1,6 +1,6 @@
 # Universal Middleware (umid)
 
-**Fast, lightweight middleware framework with zero dependencies.**
+**Fast, lightweight middleware framework with zero dependencies (~195 bytes gzipped).**
 
 [![Version](https://img.shields.io/npm/v/umid.svg?color=success&style=flat-square)](https://www.npmjs.com/package/umid) [![Brotli Size](https://deno.bundlejs.com/badge?q=umid&treeshake=[*]&config={"compression":"brotli"})](https://unpkg.com/umid) [![Gzip Size](https://deno.bundlejs.com/badge?q=umid&treeshake=[*]&config={"compression":"gzip"})](https://unpkg.com/umid) [![License](https://img.shields.io/npm/l/umid.svg)](https://github.com/kethan/umid/blob/master/LICENSE) [![TypeScript](https://img.shields.io/badge/TypeScript-Definitions-blue.svg)](https://github.com/kethan/umid)
 
@@ -30,7 +30,7 @@ npm i umid
 
 ## 🎯 Features
 
-- ✅ **Ultra-lightweight** - Tiny bundle size, no dependencies
+- ✅ **Ultra-lightweight** - **195 bytes gzipped**, no dependencies
 - ✅ **Universal** - Works in browsers, Node.js, and any JavaScript environment
 - ✅ **Dual Mode** - Two execution modes for different use cases
 - ✅ **Async/Await** - Full support for async functions and Promises
@@ -1187,7 +1187,7 @@ const handler: MiddlewareFunction<[Request, Response, NextFunction]> = async (re
 | Feature | umid | Express.js | Koa | Connect |
 |---------|------|-----------|-----|---------|
 | **Dependencies** | 0 | ~30 | ~10 | ~5 |
-| **Size** | ~1KB | ~50KB | ~5KB | ~2KB |
+| **Size** | **195 bytes gzipped** | ~50KB | ~5KB | ~2KB |
 | **Middleware Pattern** | ✅ | ✅ | ✅ | ✅ |
 | **Async/Await** | ✅ | ✅ | ✅ | ✅ |
 | **Browser Support** | ✅ | ❌ | ✅ | ❌ |
